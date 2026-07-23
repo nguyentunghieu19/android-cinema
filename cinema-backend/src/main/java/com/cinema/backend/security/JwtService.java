@@ -6,7 +6,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
+import org.springframework.beans.factory.annotation.Value;
+import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
@@ -17,9 +18,12 @@ public class JwtService {
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
 
     // Secret Key dùng để ký JWT
-    private final SecretKey secretKey =
-            Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
     /**
      * Sinh JWT
      */
@@ -29,7 +33,7 @@ public class JwtService {
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(secretKey)
+                .signWith(getSigningKey())
                 .compact();
 
     }
@@ -79,7 +83,7 @@ public class JwtService {
     private Claims extractAllClaims(String token) {
 
         return Jwts.parser()
-                .verifyWith(secretKey)
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

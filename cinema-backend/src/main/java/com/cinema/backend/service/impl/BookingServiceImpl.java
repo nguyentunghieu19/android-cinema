@@ -94,6 +94,45 @@ public class BookingServiceImpl implements BookingService {
             }
 
         }
+        for (Seat seat : seats) {
+
+            boolean booked = ticketRepository
+                    .existsByShowtimeIdAndSeatIdAndStatus(
+                            showtime.getId(),
+                            seat.getId(),
+                            TicketStatus.PENDING
+                    );
+
+            if (booked) {
+
+                throw new RuntimeException(
+                        "Ghế "
+                                + seat.getSeatRow()
+                                + seat.getSeatNumber()
+                                + " đang được người khác giữ."
+                );
+
+            }
+
+            booked = ticketRepository
+                    .existsByShowtimeIdAndSeatIdAndStatus(
+                            showtime.getId(),
+                            seat.getId(),
+                            TicketStatus.BOOKED
+                    );
+
+            if (booked) {
+
+                throw new RuntimeException(
+                        "Ghế "
+                                + seat.getSeatRow()
+                                + seat.getSeatNumber()
+                                + " đã được bán."
+                );
+
+            }
+
+        }
         // 4. Tạm thời trả dữ liệu test
         String bookingCode = UUID.randomUUID()
                 .toString()

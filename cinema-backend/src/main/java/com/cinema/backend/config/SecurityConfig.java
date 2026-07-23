@@ -43,7 +43,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cinemas/**").permitAll()
-
+                        .requestMatchers("/api/payments/vnpay-return").permitAll()
                         .anyRequest().authenticated()
                 )
 
