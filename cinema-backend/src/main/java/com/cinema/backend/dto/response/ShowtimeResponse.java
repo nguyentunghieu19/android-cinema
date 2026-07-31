@@ -13,6 +13,9 @@ public class ShowtimeResponse {
     private Integer roomId;
     private String roomName;
 
+    private Integer cinemaId;
+    private String cinemaName;
+
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -63,6 +66,22 @@ public class ShowtimeResponse {
         this.roomName = roomName;
     }
 
+    public Integer getCinemaId() {
+        return cinemaId;
+    }
+
+    public void setCinemaId(Integer cinemaId) {
+        this.cinemaId = cinemaId;
+    }
+
+    public String getCinemaName() {
+        return cinemaName;
+    }
+
+    public void setCinemaName(String cinemaName) {
+        this.cinemaName = cinemaName;
+    }
+
     public LocalDateTime getStartTime() {
         return startTime;
     }
@@ -94,5 +113,4 @@ public class ShowtimeResponse {
     public void setStatus(Boolean status) {
         this.status = status;
     }
-
 }

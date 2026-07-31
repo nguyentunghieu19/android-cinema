@@ -19,6 +19,9 @@ public class ShowtimeMapper {
         response.setRoomId(showtime.getRoom().getId());
         response.setRoomName(showtime.getRoom().getName());
 
+        response.setCinemaId(showtime.getRoom().getCinema().getId());
+        response.setCinemaName(showtime.getRoom().getCinema().getName());
+
         response.setStartTime(showtime.getStartTime());
         response.setEndTime(showtime.getEndTime());
 
