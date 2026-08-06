@@ -22,6 +22,7 @@ import com.cinema.android.ui.screen.booking.ShowtimeSelectionScreen
 import com.cinema.android.ui.screen.home.HomeScreen
 import com.cinema.android.ui.screen.login.LoginScreen
 import com.cinema.android.ui.screen.movie.MovieDetailScreen
+import com.cinema.android.ui.screen.payment.PaymentScreen
 import com.cinema.android.ui.screen.register.RegisterScreen
 
 @Composable
@@ -119,10 +120,40 @@ fun CinemaNavGraph() {
             BookingConfirmationScreen(
                 showtimeId = showtimeId,
                 seatIds = seatIds,
-                onBookingSuccess = { bookingCode, totalAmount ->
-                    navController.navigate(Screen.BookingSuccess.createRoute(bookingCode, totalAmount)) {
+                onBookingSuccess = { bookingId, bookingCode, totalAmount ->
+                    navController.navigate(
+                        Screen.Payment.createRoute(bookingId, bookingCode, totalAmount)
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Payment.route,
+            arguments = listOf(
+                navArgument("bookingId") { type = NavType.IntType },
+                navArgument("bookingCode") { type = NavType.StringType },
+                navArgument("totalAmount") { type = NavType.FloatType }
+            )
+        ) { backStackEntry ->
+            val bookingId = backStackEntry.arguments?.getInt("bookingId") ?: return@composable
+            val bookingCode = backStackEntry.arguments?.getString("bookingCode") ?: ""
+            val totalAmount = backStackEntry.arguments?.getFloat("totalAmount")?.toDouble() ?: 0.0
+
+            PaymentScreen(
+                bookingId = bookingId,
+                onPaymentSuccess = {
+                    navController.navigate(
+                        Screen.BookingSuccess.createRoute(bookingCode, totalAmount)
+                    ) {
                         popUpTo(Screen.Home.route)
                     }
+                },
+                onPaymentFailed = { _ ->
+                    navController.popBackStack(Screen.Home.route, inclusive = false)
+                },
+                onCancel = {
+                    navController.popBackStack(Screen.Home.route, inclusive = false)
                 }
             )
         }

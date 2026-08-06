@@ -84,6 +84,19 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
+        List<Showtime> overlapping = showtimeRepository.findOverlapping(
+                request.getRoomId(),
+                request.getStartTime(),
+                request.getEndTime(),
+                null
+        );
+
+        if (!overlapping.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Phong chieu da co suat chieu khac trong khoang thoi gian nay"
+            );
+        }
+
         Showtime showtime = new Showtime();
 
         showtime.setMovie(movie);
@@ -109,6 +122,19 @@ public class ShowtimeServiceImpl implements ShowtimeService {
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        List<Showtime> overlapping = showtimeRepository.findOverlapping(
+                request.getRoomId(),
+                request.getStartTime(),
+                request.getEndTime(),
+                id
+        );
+
+        if (!overlapping.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Phong chieu da co suat chieu khac trong khoang thoi gian nay"
+            );
+        }
 
         showtime.setMovie(movie);
         showtime.setRoom(room);
@@ -137,6 +163,9 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         List<Seat> seats =
                 seatRepository.findByRoomId(showtime.getRoom().getId());
 
+        List<Ticket> tickets =
+                ticketRepository.findByShowtimeId(showtimeId);
+
         List<SeatMapResponse> result = new ArrayList<>();
 
         for (Seat seat : seats) {
@@ -146,15 +175,13 @@ public class ShowtimeServiceImpl implements ShowtimeService {
             response.setSeatId(seat.getId());
             response.setSeatRow(seat.getSeatRow());
             response.setSeatNumber(seat.getSeatNumber());
-
             response.setStatus("AVAILABLE");
 
-            List<Ticket> tickets =
-                    ticketRepository.findByShowtimeId(showtimeId);
-
-
-
             for (Ticket ticket : tickets) {
+
+                if (!ticket.getSeat().getId().equals(seat.getId())) {
+                    continue;
+                }
 
                 switch (ticket.getStatus()) {
 
@@ -168,10 +195,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
 
                     default:
                         break;
-                }
-
-                if (!response.getStatus().equals("AVAILABLE")) {
-                    break;
                 }
             }
 

@@ -6,6 +6,7 @@ import com.cinema.android.data.remote.api.MovieApi
 import com.cinema.android.data.remote.api.ShowtimeApi
 import com.cinema.android.data.remote.interceptor.AuthInterceptor
 import com.cinema.android.data.remote.api.BookingApi
+import com.cinema.android.data.remote.api.PaymentApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -88,5 +89,11 @@ object NetworkModule {
     @Singleton
     fun provideBookingApi(retrofit: Retrofit): BookingApi {
         return retrofit.create(BookingApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun providePaymentApi(retrofit: Retrofit): PaymentApi {
+        return retrofit.create(PaymentApi::class.java)
     }
 }

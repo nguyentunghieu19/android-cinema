@@ -8,6 +8,8 @@ import com.cinema.android.data.repository.ShowtimeRepositoryImpl
 import com.cinema.android.domain.repository.ShowtimeRepository
 import com.cinema.android.data.repository.BookingRepositoryImpl
 import com.cinema.android.domain.repository.BookingRepository
+import com.cinema.android.data.repository.PaymentRepositoryImpl
+import com.cinema.android.domain.repository.PaymentRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,4 +40,9 @@ abstract class RepositoryModule {
     abstract fun bindBookingRepository(
         bookingRepositoryImpl: BookingRepositoryImpl
     ): BookingRepository
+    @Binds
+    @Singleton
+    abstract fun bindPaymentRepository(
+        paymentRepositoryImpl: PaymentRepositoryImpl
+    ): PaymentRepository
 }

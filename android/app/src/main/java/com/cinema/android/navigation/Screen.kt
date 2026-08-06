@@ -17,6 +17,11 @@ sealed class Screen(val route: String) {
         fun createRoute(showtimeId: Int, seatIds: List<Int>) =
             "bookingConfirmation/$showtimeId/${seatIds.joinToString("-")}"
     }
+
+    data object Payment : Screen("payment/{bookingId}/{bookingCode}/{totalAmount}") {
+        fun createRoute(bookingId: Int, bookingCode: String, totalAmount: Double) =
+            "payment/$bookingId/$bookingCode/$totalAmount"
+    }
     data object BookingSuccess : Screen("bookingSuccess/{bookingCode}/{totalAmount}") {
         fun createRoute(bookingCode: String, totalAmount: Double) =
             "bookingSuccess/$bookingCode/$totalAmount"

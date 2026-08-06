@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter
 fun BookingConfirmationScreen(
     showtimeId: Int,
     seatIds: List<Int>,
-    onBookingSuccess: (bookingCode: String, totalAmount: Double) -> Unit,
+    onBookingSuccess: (bookingId: Int, bookingCode: String, totalAmount: Double) -> Unit,
     viewModel: BookingViewModel = hiltViewModel()
 ) {
     val seatState by viewModel.seatSelectionState.collectAsStateWithLifecycle()
@@ -42,7 +42,7 @@ fun BookingConfirmationScreen(
     LaunchedEffect(bookingState) {
         if (bookingState is CreateBookingUiState.Success) {
             val result = (bookingState as CreateBookingUiState.Success).result
-            onBookingSuccess(result.bookingCode, result.totalAmount)
+            onBookingSuccess(result.bookingId, result.bookingCode, result.totalAmount)
         }
     }
 
@@ -77,14 +77,14 @@ fun BookingConfirmationScreen(
                 Text(text = "${showtime.cinemaName} - ${showtime.roomName}")
                 Text(text = showtime.startTime.format(timeFormatter))
 
-                Divider(modifier = Modifier.padding(vertical = 12.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
                 Text(
                     text = "Ghe: " + selectedSeats.joinToString(", ") { "${it.row}${it.number}" }
                 )
                 Text(text = "So luong: ${selectedSeats.size} ghe")
 
-                Divider(modifier = Modifier.padding(vertical = 12.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
                 Text(
                     text = "Tong tien: %,.0f d".format(totalPrice),
