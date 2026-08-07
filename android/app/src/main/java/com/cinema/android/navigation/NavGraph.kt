@@ -19,11 +19,13 @@ import androidx.navigation.navArgument
 import com.cinema.android.ui.screen.booking.BookingConfirmationScreen
 import com.cinema.android.ui.screen.booking.SeatSelectionScreen
 import com.cinema.android.ui.screen.booking.ShowtimeSelectionScreen
-import com.cinema.android.ui.screen.home.HomeScreen
 import com.cinema.android.ui.screen.login.LoginScreen
+import com.cinema.android.ui.screen.main.MainScreen
 import com.cinema.android.ui.screen.movie.MovieDetailScreen
 import com.cinema.android.ui.screen.payment.PaymentScreen
 import com.cinema.android.ui.screen.register.RegisterScreen
+import com.cinema.android.ui.screen.ticket.TicketDetailScreen
+import com.cinema.android.ui.screen.ticket.TicketHistoryScreen
 
 @Composable
 fun CinemaNavGraph() {
@@ -60,9 +62,17 @@ fun CinemaNavGraph() {
         }
 
         composable(Screen.Home.route) {
-            HomeScreen(
+            MainScreen(
                 onMovieClick = { movieId ->
                     navController.navigate(Screen.MovieDetail.createRoute(movieId))
+                },
+                onLoggedOut = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onViewBookingHistory = {
+                    navController.navigate(Screen.TicketHistory.route)
                 }
             )
         }
@@ -175,6 +185,25 @@ fun CinemaNavGraph() {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.TicketHistory.route) {
+            TicketHistoryScreen(
+                onBookingClick = { bookingId ->
+                    navController.navigate(Screen.TicketDetail.createRoute(bookingId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.TicketDetail.route,
+            arguments = listOf(navArgument("bookingId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val bookingId = backStackEntry.arguments?.getInt("bookingId") ?: return@composable
+            TicketDetailScreen(
+                bookingId = bookingId,
+                onBack = { navController.popBackStack() }
             )
         }
     }

@@ -1,6 +1,8 @@
 package com.cinema.android.ui.screen.booking
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,10 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +34,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cinema.android.domain.model.Seat
@@ -49,121 +62,220 @@ fun SeatSelectionScreen(
         viewModel.loadSeatSelectionData(showtimeId)
     }
 
-    when (val currentState = state) {
-        is SeatSelectionUiState.Loading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-
-        is SeatSelectionUiState.Error -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = currentState.message, color = MaterialTheme.colorScheme.error)
-            }
-        }
-
-        is SeatSelectionUiState.Success -> {
-            val showtime = currentState.showtime
-            val seatsByRow = currentState.seats.groupBy { it.row }.toSortedMap()
-            val totalPrice = selectedSeatIds.size * showtime.price
-
-            Column(modifier = Modifier.fillMaxSize()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = showtime.movieTitle, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        text = "${showtime.cinemaName} - ${showtime.roomName}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0F0F))
+    ) {
+        when (val currentState = state) {
+            is SeatSelectionUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFFFFC107))
                 }
+            }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    seatsByRow.forEach { (row, seatsInRow) ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        ) {
-                            seatsInRow.sortedBy { it.number }.forEach { seat ->
-                                SeatBox(
-                                    seat = seat,
-                                    isSelected = selectedSeatIds.contains(seat.id),
-                                    onClick = {
-                                        if (seat.status == SeatStatus.AVAILABLE) {
-                                            selectedSeatIds = if (selectedSeatIds.contains(seat.id)) {
-                                                selectedSeatIds - seat.id
-                                            } else {
-                                                selectedSeatIds + seat.id
+            is SeatSelectionUiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = currentState.message, color = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            is SeatSelectionUiState.Success -> {
+                val showtime = currentState.showtime
+                val seatsByRow = currentState.seats.groupBy { it.row }.toSortedMap()
+                val totalPrice = selectedSeatIds.size * showtime.price
+
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Header
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = showtime.movieTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${showtime.cinemaName} • ${showtime.roomName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.LightGray
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Cinema Screen UI
+                        CinemaScreenIndicator()
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        // Seats Grid
+                        seatsByRow.forEach { (row, seatsInRow) ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(vertical = 6.dp)
+                            ) {
+                                // Row Label
+                                Text(
+                                    text = row,
+                                    modifier = Modifier.width(20.dp).align(Alignment.CenterVertically),
+                                    color = Color.Gray,
+                                    fontSize = 12.sp
+                                )
+                                
+                                seatsInRow.sortedBy { it.number }.forEach { seat ->
+                                    SeatBox(
+                                        seat = seat,
+                                        isSelected = selectedSeatIds.contains(seat.id),
+                                        onClick = {
+                                            if (seat.status == SeatStatus.AVAILABLE) {
+                                                selectedSeatIds = if (selectedSeatIds.contains(seat.id)) {
+                                                    selectedSeatIds - seat.id
+                                                } else {
+                                                    selectedSeatIds + seat.id
+                                                }
                                             }
                                         }
-                                    }
-                                )
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(40.dp))
+                        SeatLegend()
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    // Bottom Summary Bar
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "${selectedSeatIds.size} Ghế đã chọn",
+                                        color = Color.LightGray,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        text = "%,.0f đ".format(totalPrice),
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = Color(0xFFFFC107),
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+                                Button(
+                                    onClick = { onConfirm(showtimeId, selectedSeatIds.toList()) },
+                                    enabled = selectedSeatIds.isNotEmpty(),
+                                    modifier = Modifier.height(50.dp).width(150.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFFFC107),
+                                        contentColor = Color.Black,
+                                        disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
+                                    )
+                                ) {
+                                    Text("TIẾP TỤC", fontWeight = FontWeight.ExtraBold)
+                                }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SeatLegend()
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "Da chon: ${selectedSeatIds.size} ghe")
-                    Text(
-                        text = "Tong tien: %,.0f d".format(totalPrice),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { onConfirm(showtimeId, selectedSeatIds.toList()) },
-                        enabled = selectedSeatIds.isNotEmpty(),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Xac nhan")
-                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CinemaScreenIndicator() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(20.dp).padding(horizontal = 40.dp)) {
+            val path = Path().apply {
+                moveTo(0f, 20f)
+                quadraticTo(size.width / 2, 0f, size.width, 20f)
+            }
+            drawPath(
+                path = path,
+                color = Color(0xFFFFC107),
+                style = Stroke(width = 4f)
+            )
+        }
+        Text(
+            text = "MÀN HÌNH",
+            color = Color.Gray,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 4.sp
+        )
     }
 }
 
 @Composable
 private fun SeatBox(seat: Seat, isSelected: Boolean, onClick: () -> Unit) {
     val backgroundColor = when {
-        seat.status == SeatStatus.BOOKED -> MaterialTheme.colorScheme.surfaceVariant
-        isSelected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.secondaryContainer
+        seat.status == SeatStatus.BOOKED -> Color(0xFF333333)
+        isSelected -> Color(0xFFFFC107)
+        else -> Color(0xFF222222)
+    }
+    
+    val borderColor = when {
+        isSelected -> Color.White
+        else -> Color.Gray.copy(alpha = 0.3f)
     }
 
     Box(
         modifier = Modifier
-            .size(32.dp)
-            .clip(RoundedCornerShape(4.dp))
+            .size(34.dp)
+            .clip(RoundedCornerShape(6.dp))
             .background(backgroundColor)
+            .border(1.dp, borderColor, RoundedCornerShape(6.dp))
             .clickable(onClick = onClick, enabled = seat.status == SeatStatus.AVAILABLE),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "${seat.row}${seat.number}",
-            style = MaterialTheme.typography.labelSmall
+            text = seat.number.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isSelected) Color.Black else Color.White,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
 
 @Composable
 private fun SeatLegend() {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        LegendItem(color = MaterialTheme.colorScheme.secondaryContainer, label = "Trong")
-        LegendItem(color = MaterialTheme.colorScheme.primary, label = "Da chon")
-        LegendItem(color = MaterialTheme.colorScheme.surfaceVariant, label = "Da dat")
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier
+            .background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        LegendItem(color = Color(0xFF222222), label = "Trống")
+        LegendItem(color = Color(0xFFFFC107), label = "Đã chọn")
+        LegendItem(color = Color(0xFF333333), label = "Đã đặt")
     }
 }
 
 @Composable
-private fun LegendItem(color: androidx.compose.ui.graphics.Color, label: String) {
+private fun LegendItem(color: Color, label: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -171,7 +283,7 @@ private fun LegendItem(color: androidx.compose.ui.graphics.Color, label: String)
                 .clip(RoundedCornerShape(3.dp))
                 .background(color)
         )
-        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-        Text(text = label, style = MaterialTheme.typography.labelSmall)
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.LightGray)
     }
 }
